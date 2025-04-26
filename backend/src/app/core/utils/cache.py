@@ -174,11 +174,13 @@ async def _delete_keys_by_pattern(pattern: str) -> None:
     if client is None:
         raise MissingClientError
 
-    cursor = -1
-    while cursor != 0:
+    cursor = 0
+    while True:
         cursor, keys = await client.scan(cursor, match=pattern, count=100)
         if keys:
             await client.delete(*keys)
+        if cursor == 0:
+            break
 
 
 def cache(
@@ -206,7 +208,7 @@ def cache(
     resource_id_type: Union[type, Tuple[type, ...]], default int
         The expected type of the resource ID.
         This can be a single type (e.g., int) or a tuple of types (e.g., (int, str)).
-        Defaults to int. This is used only if resource_id_name is not provided.
+        Defaults to int. This is used only if resource_id is not passed.
     to_invalidate_extra: Dict[str, Any] | None, optional
         A dictionary where keys are cache key prefixes and values are templates for cache key suffixes.
         These keys are invalidated when the decorated function is called with a method other than GET.

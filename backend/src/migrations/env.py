@@ -9,15 +9,26 @@ from app.core.db.database import Base
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+from urllib.parse import quote_plus
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option(
-    "sqlalchemy.url",
-    f"{settings.POSTGRES_ASYNC_PREFIX}{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}",
-)
+# Build the DB URL with URL-encoded credentials, allow override via POSTGRES_URL
+if settings.POSTGRES_URL:
+    db_url = settings.POSTGRES_URL
+else:
+    db_url = (
+        f"{settings.POSTGRES_ASYNC_PREFIX}"
+        f"{quote_plus(settings.POSTGRES_USER)}:"
+        f"{quote_plus(settings.POSTGRES_PASSWORD)}@"
+        f"{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/"
+        f"{settings.POSTGRES_DB}"
+    )
+# Escape % signs for configparser interpolation
+db_url = db_url.replace("%", "%%")
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

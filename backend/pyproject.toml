@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "fastapi-boilerplate"
+name = "warehouse-kiot"
 version = "0.1.0"
-description = "A fully Async FastAPI boilerplate using SQLAlchemy and Pydantic 2"
-authors = ["Igor Magalhaes <igor.magalhaes.r@gmail.com>"]
+description = "A Warehouse Management System with KiotViet API integration"
+authors = ["dobtechh <dobtechh@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "src" }]
@@ -17,7 +17,7 @@ uvloop = "^0.19.0"
 httptools = "^0.6.1"
 uuid = "^1.30"
 alembic = "^1.13.1"
-asyncpg = "^0.29.0"
+asyncpg = "^0.27.0"
 SQLAlchemy-Utils = "^0.41.1"
 python-jose = "^3.3.0"
 SQLAlchemy = "^2.0.25"
