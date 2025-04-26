@@ -299,6 +299,28 @@ Install poetry:
 ```sh
 pip install poetry
 ```
+### 3.4 Database Migrations
+
+> \[!WARNING\]
+> To create the tables if you did not create the endpoints, ensure that you import the models in src/app/models/__init__.py. This step is crucial to create the new tables.
+
+If you are using the db in docker, you need to change this in `docker-compose.yml` to run migrations:
+
+While in the `src` folder, run Alembic migrations:
+
+```sh
+poetry run alembic revision --autogenerate
+```
+
+And to apply the migration
+
+```sh
+poetry run alembic upgrade head
+```
+
+> [!NOTE]
+> If you do not have poetry, you may run it without poetry after running `pip install alembic`
+
 
 ## 4. Usage
 
@@ -481,52 +503,6 @@ poetry run python -m src.scripts.create_first_superuser
 
 To create the first tier it's similar, you just replace `create_superuser` for `create_tier` service or `create_first_superuser` to `create_first_tier` for scripts. If using `docker compose`, do not forget to uncomment the `create_tier` service in `docker-compose.yml`.
 
-### 4.4 Database Migrations
-
-> \[!WARNING\]
-> To create the tables if you did not create the endpoints, ensure that you import the models in src/app/models/__init__.py. This step is crucial to create the new tables.
-
-If you are using the db in docker, you need to change this in `docker-compose.yml` to run migrations:
-
-```sh
-  db:
-    image: postgres:13
-    env_file:
-      - ./src/.env
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    # -------- replace with comment to run migrations with docker --------
-    expose:
-      - "5432"
-    # ports:
-    #  - 5432:5432
-```
-
-Getting:
-
-```sh
-  db:
-    ...
-    # expose:
-    #  - "5432"
-    ports:
-      - 5432:5432
-```
-
-While in the `src` folder, run Alembic migrations:
-
-```sh
-poetry run alembic revision --autogenerate
-```
-
-And to apply the migration
-
-```sh
-poetry run alembic upgrade head
-```
-
-> [!NOTE]
-> If you do not have poetry, you may run it without poetry after running `pip install alembic`
 
 ## 5. Extending
 
