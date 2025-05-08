@@ -1,0 +1,1 @@
+from .stock_controller import stock_out_router

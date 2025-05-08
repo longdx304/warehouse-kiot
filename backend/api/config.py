@@ -29,4 +29,11 @@ class Settings:
     ENVIRONMENT: str = os.getenv("ENVIRONMENT")
     # Note: removed BaseSettings inheritance and Config class to avoid pydantic parsing
 
+    # KiotViet
+    KIOTVIET_AUTH_URL: str = os.getenv("KIOTVIET_AUTH_URL")
+    KIOTVIET_BASE_URL: str = os.getenv("KIOTVIET_BASE_URL")
+    KIOTVIET_CLIENT_ID: str = os.getenv("KIOTVIET_CLIENT_ID")
+    KIOTVIET_CLIENT_SECRET: str = os.getenv("KIOTVIET_CLIENT_SECRET")
+    KIOTVIET_RETAILER: str = os.getenv("KIOTVIET_RETAILER")
+
 settings = Settings()

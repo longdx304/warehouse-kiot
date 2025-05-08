@@ -10,6 +10,7 @@ from api.modules.user.controller.user_controller import router as user_router
 from api.modules.warehouse.controller.warehouse_controller import router as warehouse_router
 from api.modules.warehouse_inventory.controller.warehouse_inventory_controller import router as inventory_router
 from api.modules.item_unit.controller.item_unit_controller import router as item_unit_router
+from api.modules.order.controller import stock_out_router
 
 app = FastAPI(
     title="Warehouse Management API",
@@ -32,6 +33,7 @@ app.include_router(user_router, prefix="/api/users", tags=["Users"])
 app.include_router(warehouse_router, prefix="/api/warehouses", tags=["Warehouses"])
 app.include_router(inventory_router, prefix="/api/inventory", tags=["Inventory"])
 app.include_router(item_unit_router, prefix="/api/units", tags=["Item Units"])
+app.include_router(stock_out_router, prefix="/api/stock-out", tags=["Stock Out"])
 
 @app.on_event("startup")
 async def startup_event():
