@@ -4,7 +4,7 @@ from typing import List
 
 from api.database import get_db
 from api.modules.user.service.user_service import UserService
-from api.modules.user.dto.input import UserCreate, UserUpdate, UserResponse, UserLogin, TokenResponse, PaginatedUsersResponse
+from api.modules.user.dto.input import UserCreate, UserUpdate, UserResponse, UserLogin, TokenResponse, PaginatedUsersResponse, RefreshToken
 from api.middlewares.auth.auth_bearer import get_current_user, admin_required
 
 router = APIRouter()
@@ -37,6 +37,47 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return result
+
+@router.post("/refresh-token", response_model=TokenResponse)
+async def refresh_token(
+    refresh_token: RefreshToken,
+    db: AsyncSession = Depends(get_db)
+):
+    """Refresh access token using a valid refresh token"""
+    user_service = UserService(db)
+    result = await user_service.refresh_token(refresh_token.refresh_token)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return result
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    refresh_token: RefreshToken,
+    db: AsyncSession = Depends(get_db)
+):
+    """Logout user by invalidating refresh token"""
+    user_service = UserService(db)
+    success = await user_service.logout(refresh_token.refresh_token)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token or already logged out"
+        )
+    return None
+
+@router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+async def logout_all_devices(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Logout from all devices by invalidating all refresh tokens for the current user"""
+    user_service = UserService(db)
+    await user_service.logout_all(current_user["user_id"])
+    return None
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(

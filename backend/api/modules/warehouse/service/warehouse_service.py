@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
-from api.modules.warehouse.repository.warehouse_repo import WarehouseRepository
+from api.modules.warehouse.repository.warehouse_repository import WarehouseRepository
 from api.modules.warehouse.entity.warehouse_entity import Warehouse
 from api.modules.warehouse.dto.input import WarehouseCreate, WarehouseUpdate
 from fastapi import HTTPException

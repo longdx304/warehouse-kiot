@@ -40,9 +40,10 @@ class UserLogin(BaseModel):
     password: str
 
 class TokenResponse(BaseModel):
-    """DTO for token response"""
+    """Token response model"""
     access_token: str
-    token_type: str = "bearer"
+    refresh_token: str
+    token_type: str
     expires_in: int
     user: UserResponse
 
@@ -51,4 +52,8 @@ class PaginatedUsersResponse(BaseModel):
     count: int
     offset: int
     limit: int
+
+class RefreshToken(BaseModel):
+    """DTO for refresh token requests"""
+    refresh_token: str
     

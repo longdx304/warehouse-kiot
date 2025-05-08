@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
-from api.modules.warehouse_inventory.repository.warehouse_inventory_repo import WarehouseInventoryRepository
+from api.modules.warehouse_inventory.repository.warehouse_inventory_repository import WarehouseInventoryRepository
 from api.modules.warehouse_inventory.entity.warehouse_inventory_entity import WarehouseInventory
 from api.modules.warehouse_inventory.dto.input import WarehouseInventoryCreate, WarehouseInventoryUpdate
 from api.modules.warehouse.service.warehouse_service import WarehouseService

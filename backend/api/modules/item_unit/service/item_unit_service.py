@@ -1,9 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
-from api.modules.item_unit.repository.item_unit_repo import ItemUnitRepository
+from api.modules.item_unit.repository.item_unit_repository import ItemUnitRepository
 from api.modules.item_unit.entity.item_unit_entity import ItemUnit
 from api.modules.item_unit.dto.input import ItemUnitCreate, ItemUnitUpdate
+from core.error_handlers import add_error_handlers
+from core.exceptions import NotFoundException, ValidationException
 
 class ItemUnitService:
     """Service for item unit business logic"""
@@ -16,7 +18,7 @@ class ItemUnitService:
         # Check if unit already exists
         existing_unit = await self.repository.get_by_unit(item_unit_data.unit)
         if existing_unit:
-            raise ValueError(f"Unit '{item_unit_data.unit}' already exists")
+            raise ValidationException(f"Unit '{item_unit_data.unit}' already exists")
         
         item_unit_dict = item_unit_data.model_dump()
         return await self.repository.create(item_unit_dict)
@@ -34,7 +36,7 @@ class ItemUnitService:
         # Get existing item unit
         existing_item_unit = await self.repository.get_by_id(item_unit_id)
         if not existing_item_unit:
-            return None
+            raise NotFoundException(f"Item unit with id {item_unit_id} not found")
         
         # Filter out None values
         update_data = {k: v for k, v in item_unit_data.model_dump().items() if v is not None}
@@ -43,7 +45,7 @@ class ItemUnitService:
         if "unit" in update_data and update_data["unit"] != existing_item_unit.unit:
             unit_check = await self.repository.get_by_unit(update_data["unit"])
             if unit_check:
-                raise ValueError(f"Unit '{update_data['unit']}' already exists")
+                raise ValidationException(f"Unit '{update_data['unit']}' already exists")
         
         # Perform update
         if update_data:
@@ -54,4 +56,3 @@ class ItemUnitService:
     async def delete_item_unit(self, item_unit_id: str) -> bool:
         """Delete an item unit"""
         return await self.repository.delete(item_unit_id)
-      
