@@ -17,8 +17,9 @@ class Settings:
     
     # JWT settings
     SECRET_KEY: str = os.getenv("SECRET_KEY")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
-    
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
+        
     # CORS settings
     CORS_ORIGINS: List[str] = os.getenv("CORS_ORIGINS").split(",")
     
@@ -27,8 +28,7 @@ class Settings:
     
     # Environment
     ENVIRONMENT: str = os.getenv("ENVIRONMENT")
-    # Note: removed BaseSettings inheritance and Config class to avoid pydantic parsing
-
+    
     # KiotViet
     KIOTVIET_AUTH_URL: str = os.getenv("KIOTVIET_AUTH_URL")
     KIOTVIET_BASE_URL: str = os.getenv("KIOTVIET_BASE_URL")

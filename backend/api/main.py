@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.middlewares.logging_middleware import LoggingMiddleware
+from api.middlewares.rate_limit import RateLimitMiddleware
 from api.database import init_db, async_session_factory
 from api.config import settings
 
@@ -27,6 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(LoggingMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=120)  # Adjust the rate limit as needed
 
 # Include routers
 app.include_router(user_router, prefix="/api/users", tags=["Users"])

@@ -2,6 +2,13 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+
+# Logs
+logs/
+*.log
+*.log.*
+*.log.*.*
 
 # Environments
 .env
