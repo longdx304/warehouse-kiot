@@ -6,6 +6,7 @@ class Prefix(str, Enum):
     WAREHOUSE = "wh_"
     WAREHOUSE_INVENTORY = "wi_"
     ITEM_UNIT = "iu_"
+    LINE_ITEM = "item_"
 
 def generate_id(prefix: Prefix) -> str:
     """
