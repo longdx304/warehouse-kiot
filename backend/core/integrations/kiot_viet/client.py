@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import httpx
 import time
 from api.config import settings
@@ -101,4 +101,18 @@ class KiotVietClient:
     async def get_orders(self, params: Dict[str, Any] = None) -> Dict[str, Any]:
         """Get orders from KiotViet"""
         return await self._request("GET", "/orders", params=params)
+    
+    async def get_order_by_id(self, order_id: str) -> Optional[Dict[str, Any]]:
+        """Get a specific order by its id"""
+        # Convert order_id to string if not already
+        order_id = str(order_id)
+        
+        params = {"orderId": order_id}
+        response = await self._request("GET", "/orders", params=params)
+        
+        if response.get("total", 0) == 0 or not response.get("data"):
+            logger.warning(f"No order found with id: {order_id}")
+            return None
+        
+        return response["data"][0]
       
