@@ -19,7 +19,6 @@ import { ArrowLeft, Check, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ChangeEvent, FC, useMemo, useState } from 'react';
 import OutboundDetailItem from '../components/outbound-detail-item';
-// import { FulfillmentStatus } from '@/types/order';
 import { ActionAbles } from '@/components/Dropdown';
 import { useUser } from '@/lib/providers/user-provider';
 import { getErrorMessage } from '@/lib/utils';
@@ -34,6 +33,7 @@ import ConfirmOrder from '../../components/confirm-order';
 import Notes from '../../inbound/components/notes';
 import OutboundModal from '../components/outbound-modal';
 import dayjs from 'dayjs';
+import { useGetOrder } from '@/lib/hooks/api/order/queries';
 
 type Props = {
 	id: string;
@@ -47,7 +47,7 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 	const [searchValue, setSearchValue] = useState<string>('');
 	const [variantId, setVariantId] = useState<string | null>(null);
 	const [selectedItem, setSelectedItem] = useState<LineItem | null>(null);
-	const { order, isLoading, refetch } = useAdminProductOutbound(id);
+	const { data: order, isLoading, refetch } = useGetOrder(id);
 	const updateProductOutbound = useAdminUpdateProductOutbound(id);
 
 	const createNote = useAdminCreateNote();
@@ -78,32 +78,32 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 		setActiveKey(key as FulfillmentStatus);
 	};
 
-	const lineItems = useMemo(() => {
-		if (!order?.items) return [];
+	// const lineItems = useMemo(() => {
+	// 	if (!order?.items) return [];
 
-		const itemsByStatus = order.items.filter((item: any) => {
-			const lineItem = item as LineItem;
-			const warehouse_quantity = lineItem.warehouse_quantity ?? 0;
-			if (activeKey === FulfillmentStatus.FULFILLED) {
-				return warehouse_quantity === item.quantity;
-			}
-			return warehouse_quantity !== item.quantity;
-		});
+	// 	const itemsByStatus = order.items.filter((item: any) => {
+	// 		const lineItem = item as LineItem;
+	// 		const warehouse_quantity = lineItem.warehouse_inventory ?? 0;
+	// 		if (activeKey === FulfillmentStatus.FULFILLED) {
+	// 			return warehouse_quantity === item.quantity;
+	// 		}
+	// 		return warehouse_quantity !== item.quantity;
+	// 	});
 
-		return itemsByStatus
-			.filter((item: any) => {
-				const lineItem = item as LineItem;
-				const title = lineItem.title.toLowerCase();
-				const description = lineItem?.description?.toLowerCase();
-				const search = searchValue.toLowerCase();
-				return title.includes(search) || description?.includes(search);
-			})
-			.sort((a, b) => {
-				return (
-					new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-				);
-			});
-	}, [order?.items, searchValue, activeKey]);
+	// 	return itemsByStatus
+	// 		.filter((item: any) => {
+	// 			const lineItem = item as LineItem;
+	// 			const title = lineItem.product_name.toLowerCase();
+	// 			const description = lineItem?.product_code?.toLowerCase();
+	// 			const search = searchValue.toLowerCase();
+	// 			return title.includes(search) || description?.includes(search);
+	// 		})
+	// 		.sort((a, b) => {
+	// 			return (
+	// 				new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+	// 			);
+	// 		});
+	// }, [order?.items, searchValue, activeKey]);
 
 	const items: TabsProps['items'] = [
 		{
@@ -182,8 +182,8 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 			label: 'Hoàn thành xuất kho',
 			icon: <Check size={18} />,
 			onClick: onOpenConfirm,
-			disabled:
-				(order?.fulfillment_status as any) === FulfillmentStatus.EXPORTED,
+			// disabled:
+			// 	(order?.fulfillment_status as any) === FulfillmentStatus.EXPORTED,
 		},
 		{
 			label: 'Trang Order chi tiết',
@@ -194,9 +194,9 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 		},
 	];
 
-	const handler = order?.handler
-		? `${order?.handler?.first_name}`
-		: 'Chưa xác định';
+	// const handler = order?.handler
+	// 	? `${order?.handler?.first_name}`
+	// 	: 'Chưa xác định';
 
 	return (
 		<Flex vertical gap={12}>
@@ -213,9 +213,10 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 			<Card loading={false} className="w-full mb-10" bordered={false}>
 				<Flex align="flex-start" justify="space-between">
 					<Flex vertical>
-						<Title level={4}>{`Đơn hàng #${order?.display_id}`}</Title>
+						<Title level={4}>{`Đơn hàng #${order?.code}`}</Title>
 						<Text className="text-gray-600">
-							{`Người phụ trách: ${handler}`}
+							{`Người phụ trách: ${order?.handler_id}`}
+							{`Thời gian xử lý: ${order?.handler_at}`}
 						</Text>
 					</Flex>
 					<ActionAbles actions={actions as any} />
@@ -238,19 +239,19 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 				/>
 				<List
 					grid={{ gutter: 12, xs: 1, sm: 2, md: 2, lg: 3, xl: 4, xxl: 5 }}
-					dataSource={lineItems}
+					dataSource={order?.items}
 					loading={isLoading}
 					renderItem={(item: LineItem) => (
 						<List.Item>
 							<OutboundDetailItem
-								item={item}
+								item={item as any}
 								handleClickDetail={(id) => handleClickDetail(id, item)}
 							/>
 						</List.Item>
 					)}
 					pagination={{
 						pageSize: DEFAULT_PAGE_SIZE,
-						total: lineItems.length,
+						total: order?.items.length,
 						showTotal: (total, range) =>
 							`${range[0]}-${range[1]} trong ${total} biến thể`,
 					}}
@@ -261,7 +262,7 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 								: 'Chưa có sản phẩm nào hoàn thành. Hãy kiểm tra tại tab "Đang thực hiện"',
 					}}
 				/>
-				{state && variantId && selectedItem && (
+				{/* {state && variantId && selectedItem && (
 					<OutboundModal
 						isPermission={isPermission}
 						open={state}
@@ -269,34 +270,35 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 						variantId={variantId as string}
 						item={selectedItem}
 					/>
-				)}
+				)} */}
 			</Card>
 			<Notes orderId={id} type="OUTBOUND" />
 			{confirmState && (
-				<ConfirmOrder
-					state={confirmState}
-					title="Xác nhận hoàn thành xuất kho"
-					handleOk={handleComplete}
-					handleCancel={onCloseConfirm}
-				>
-					{/* Danh sách san pham */}
-					{order?.items.map((item, idx) => {
-						return (
-							<FulfillmentLine
-								item={item as LineItem}
-								key={`fulfillmentLine-${idx}`}
-							/>
-						);
-					})}
+				<></>
+				// <ConfirmOrder
+				// 	state={confirmState}
+				// 	title="Xác nhận hoàn thành xuất kho"
+				// 	handleOk={handleComplete}
+				// 	handleCancel={onCloseConfirm}
+				// >
+				// 	{/* Danh sách san pham */}
+				// 	{order?.items.map((item, idx) => {
+				// 		return (
+				// 			<FulfillmentLine
+				// 				item={item}
+				// 				key={`fulfillmentLine-${idx}`}
+				// 			/>
+				// 		);
+				// 	})}
 
-					{/* Ghi chú */}
-					<TextArea
-						value={noteInput}
-						onChange={onChangeInput}
-						placeholder="Nhập ghi chú"
-						className="w-full"
-					/>
-				</ConfirmOrder>
+				// 	{/* Ghi chú */}
+				// 	<TextArea
+				// 		value={noteInput}
+				// 		onChange={onChangeInput}
+				// 		placeholder="Nhập ghi chú"
+				// 		className="w-full"
+				// 	/>
+				// </ConfirmOrder>
 			)}
 		</Flex>
 	);
@@ -304,18 +306,18 @@ const OutboundDetail: FC<Props> = ({ id }) => {
 
 export default OutboundDetail;
 
-export const getFulfillAbleQuantity = (item: LineItem): number => {
-	return item.quantity - (item.fulfilled_quantity ?? 0);
-};
+// export const getFulfillAbleQuantity = (item: LineItem): number => {
+// 	return item.quantity - (item.fulfilled_quantity ?? 0);
+// };
 
 const FulfillmentLine = ({ item }: { item: LineItem }) => {
-	if (getFulfillAbleQuantity(item) <= 0) {
-		return null;
-	}
+	// if (getFulfillAbleQuantity(item) <= 0) {
+	// 	return null;
+	// }
 
 	return (
 		<div className="hover:bg-gray-50 rounded-md mx-[-5px] mb-1 flex h-[64px] justify-between px-[5px] cursor-pointer">
-			<div className="flex justify-center items-center space-x-4">
+			{/* <div className="flex justify-center items-center space-x-4">
 				<div className="rounded-sm flex h-[48px] w-[36px] overflow-hidden">
 					{item.thumbnail ? (
 						<Image
@@ -340,8 +342,8 @@ const FulfillmentLine = ({ item }: { item: LineItem }) => {
 						</span>
 					)}
 				</div>
-			</div>
-			<div className="flex items-center">
+			</div> */}
+			{/* <div className="flex items-center">
 				<span className="flex text-gray-500 text-xs">
 					<span
 						className={clsx('pl-1', {
@@ -355,7 +357,7 @@ const FulfillmentLine = ({ item }: { item: LineItem }) => {
 					{'/'}
 					<span className="pl-1">{getFulfillAbleQuantity(item)}</span>
 				</span>
-			</div>
+			</div> */}
 		</div>
 	);
 };

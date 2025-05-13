@@ -16,9 +16,9 @@ export default async function MainLayout({
 	return (
 		<main className="w-full pt-[4.5rem] lg:pt-0">
 			<UserProvider>
-				<FeatureFlagProvider>
+				{/* <FeatureFlagProvider> */}
 					<PollingProvider>
-						<ImportRefresh>
+						{/* <ImportRefresh> */}
 							<LayeredModalProvider>
 								<Header />
 								<Notification />
@@ -26,9 +26,9 @@ export default async function MainLayout({
 									{children}
 								</article>
 							</LayeredModalProvider>
-						</ImportRefresh>
+						{/* </ImportRefresh> */}
 					</PollingProvider>
-				</FeatureFlagProvider>
+				{/* </FeatureFlagProvider> */}
 			</UserProvider>
 		</main>
 	);

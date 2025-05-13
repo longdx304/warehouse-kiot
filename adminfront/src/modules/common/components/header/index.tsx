@@ -1,5 +1,4 @@
 'use client';
-import { User } from '@medusajs/medusa';
 import { Badge, Skeleton } from 'antd';
 import { Bell, Menu, RotateCw } from 'lucide-react';
 import Image from 'next/image';
@@ -15,10 +14,10 @@ import useScrollDirection from '@/lib/hooks/useScrollDirection';
 import { useUser } from '@/lib/providers/user-provider';
 import { cn } from '@/lib/utils';
 import { ERoutes } from '@/types/routes';
+import { useRouter } from 'next/navigation';
 import DropdownRender from '../notification/Dropdown';
 import DrawerMenu from './DrawerMenu';
 import Menubar from './Menubar';
-import { useRouter } from 'next/navigation';
 
 interface Props {}
 
@@ -26,7 +25,7 @@ const Header: FC<Props> = ({}) => {
 	const router = useRouter();
 	const { state, onClose, onOpen } = useToggleState(false);
 	const scrollDirection = useScrollDirection();
-	const { user, isLoading, remove } = useUser();
+	const { user, isLoading } = useUser();
 
 	return (
 		<Card
@@ -111,18 +110,14 @@ const Header: FC<Props> = ({}) => {
 					</Flex>
 					{/* Desktop: Content Menu */}
 					<div className="hidden lg:block h-[calc(100vh-100px)] overflow-y-auto">
-						<Menubar
-							user={user as Omit<User, 'password_hash'>}
-							remove={remove}
-							className="pr-2"
-						/>
+						<Menubar user={user!} remove={() => {}} className="pr-2" />
 					</div>
 					{/* Mobile: Drawer menu */}
 					<DrawerMenu
 						state={state}
 						onOpen={onOpen}
 						onClose={onClose}
-						user={user as Omit<User, 'password_hash'>}
+						user={user!}
 					/>
 				</Fragment>
 			)}

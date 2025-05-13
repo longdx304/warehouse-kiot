@@ -1,21 +1,15 @@
 'use client';
 
 import { Lock, LogIn, Mail } from 'lucide-react';
-
-import { setCookie } from '@/actions/auth';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Input, InputPassword } from '@/components/Input';
 import { cn } from '@/lib/utils';
 import { ERoutes } from '@/types/routes';
 import { Form, FormProps, message } from 'antd';
-import { useAdminLogin, useMedusa } from 'medusa-react';
 import { useRouter } from 'next/navigation';
-
-type FormValues = {
-	email: string;
-	password: string;
-};
+import { useLogin } from '@/lib/hooks/api/auth';
+import { LoginCredentials } from '@/types/auth';
 
 type LoginTemplateProps = {};
 
@@ -23,25 +17,25 @@ const LoginTemplate = ({}: LoginTemplateProps) => {
 	const [form] = Form.useForm();
 	const [messageApi, contextHolder] = message.useMessage();
 	const router = useRouter();
-	const { client } = useMedusa();
 
-	const { mutateAsync, isLoading } = useAdminLogin();
+	const { mutateAsync: login, isLoading } = useLogin();
 
-	const onFinish: FormProps<FormValues>['onFinish'] = async (values) => {
-		mutateAsync(values, {
-			onSuccess: async (data) => {
-				await client.admin.auth
-					.getToken(values)
-					.then(async ({ access_token }) => {
-						await setCookie(access_token);
-					});
-				message.success('Đăng nhập thành công!');
-				router.push(ERoutes.DASHBOARD);
-			},
-			onError: () => {
-				message.error('Đăng nhập thất bại!');
-			},
-		});
+	const onFinish: FormProps<LoginCredentials>['onFinish'] = async (values) => {
+		try {
+			console.log('Logging in with:', values.email);
+			const result = await login(values);
+			console.log('Login successful:', !!result);
+			message.success('Đăng nhập thành công!');
+			
+			// Use setTimeout to ensure cookie is set before redirecting
+			setTimeout(() => {
+				console.log('Redirecting to dashboard...');
+				window.location.href = ERoutes.DASHBOARD;
+			}, 500);
+		} catch (error: any) {
+			console.error('Login error:', error.message);
+			message.error('Đăng nhập thất bại! ' + (error.response?.data?.detail || error.message));
+		}
 	};
 
 	return (

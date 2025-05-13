@@ -4,20 +4,19 @@ import Image from 'next/image';
 import { Flex, Drawer, Menu } from 'antd';
 
 import { Button } from '@/components/Button';
-import { IAdminResponse } from '@/types/account';
 import Menubar from './Menubar';
-import { User } from '@medusajs/medusa';
-import { useAdminGetSession } from 'medusa-react';
+import { User } from '@/types/auth';
+import { useLogout } from '@/lib/hooks/api/auth';
 
 interface Props {
 	state: boolean;
 	onOpen: () => void;
 	onClose: () => void;
-	user: Omit<User, 'password_hash'>;
+	user: User;
 }
 
 const DrawerMenu = ({ state, onOpen, onClose, user }: Props) => {
-	const { remove } = useAdminGetSession();
+	const { mutateAsync: logout } = useLogout();
 	return (
 		<Drawer
 			className="[&_.ant-drawer-title]:flex [&_.ant-drawer-title]:justify-center [&_.ant-drawer-title]:items-center [&_.ant-drawer-body]:!px-0"
@@ -34,7 +33,11 @@ const DrawerMenu = ({ state, onOpen, onClose, user }: Props) => {
 			onClose={() => onClose()}
 			open={state}
 		>
-			<Menubar user={user} onClose={onClose} remove={remove} />
+			<Menubar user={user} onClose={onClose} remove={() => logout(undefined, {
+				onSuccess: () => {
+					onClose();
+				},
+			})} />
 		</Drawer>
 	);
 };

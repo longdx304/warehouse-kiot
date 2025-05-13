@@ -28,9 +28,9 @@ import {
 } from 'lucide-react';
 
 import { Dropdown } from '@/components/Dropdown';
-import { EPermissions, IAdminResponse } from '@/types/account';
+import { EPermissions } from '@/types/account';
 import { ERoutes } from '@/types/routes';
-import { User } from '@medusajs/medusa';
+import { User } from '@/types/auth';
 import intersection from 'lodash/intersection';
 import isEmpty from 'lodash/isEmpty';
 
@@ -100,7 +100,7 @@ const itemsAdmin: MenuProps['items'] = [
 
 // Item menu user
 const itemUser = (
-	user: IAdminResponse,
+	user: User,
 	handleDropdownClick: (e: any) => void
 ) => [
 	getItem(
@@ -111,7 +111,7 @@ const itemUser = (
 			<a onClick={(e) => e.preventDefault()}>
 				<Flex className="w-full" justify="space-between" align="center">
 					<div className="font-bold">
-						{`${user?.first_name ?? ''} ${user?.last_name ?? ''}`}
+							{`${user?.username ?? ''}`}
 					</div>
 					<Ellipsis />
 				</Flex>
@@ -124,11 +124,11 @@ const itemUser = (
 
 // Generation menu
 export const menuItems = (
-	user: Omit<User, 'password_hash'>,
+	user: User,
 	handleDropdownClick: (e: any) => void
 ) => {
 	const role = user?.role;
-	let permissions = (user as any)?.permissions?.split(',');
+	let permissions = (user as any)?.permissions;
 
 	if (role === 'admin') {
 		permissions = [

@@ -5,6 +5,40 @@ import {
 	AdminPostOrdersOrderFulfillmentsReq as MAdminPostOrdersOrderFulfillmentsReq,
 } from '@medusajs/medusa';
 
+export type StockOut = {
+	id: number;
+	code: string;
+	customerName: string;
+	status: number;
+	statusValue: string;
+	orderDetails: OrderDetail[];
+	retailerId: number;
+	soldByName: string;
+	createdDate: string;
+};
+
+export type OrderDetail = {
+	productCode: string;
+	productName: string;
+	quantity: number;
+};
+
+export enum StockOutStatus {
+
+	NOT_SHIPPED = 'chưa giao hàng',
+	
+	SHIPPING = 'đang giao hàng',
+	
+	FULFILLED = 'đã giao hàng',
+	
+	RETURNING = 'đang chuyển hoàn',
+	
+	RETURNED = 'đã chuyển hoàn',
+	
+	CANCELED = 'đã hủy',
+	
+}
+
 export type Order = MedusaOrder & {
 	handler_id?: string;
 	handler?: User;

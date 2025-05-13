@@ -1,43 +1,36 @@
 'use client';
 
-import React, {
-	PropsWithChildren,
-	useContext,
-	useEffect,
-	useState,
-} from 'react';
-import { User } from '@medusajs/medusa';
-import { useAdminGetSession } from 'medusa-react';
+import React, { PropsWithChildren, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { removeCookie } from '@/actions/auth';
+import { useSession } from '@/lib/hooks/api/auth';
+import { User } from '@/types/auth';
 import { ERoutes } from '@/types/routes';
 
 type UserContextType = {
-	user: Omit<User, 'password_hash'> | undefined;
+	user: User | undefined;
 	isLoading: boolean;
-	remove: () => void;
 };
+
 const defaultUserContext: UserContextType = {
 	user: undefined,
 	isLoading: false,
-	remove: () => {},
 };
 
 const UserContext = React.createContext(defaultUserContext);
 
 export const UserProvider = ({ children }: PropsWithChildren) => {
 	const router = useRouter();
-	const { user, isLoading, remove, isError, error } = useAdminGetSession();
+	const { data: user, isLoading, isError } = useSession();
 	
-	// Redirect to login if there is an error
-	if (isError) {
-		removeCookie();
-		router.push(ERoutes.LOGIN);
-		return;
-	}
+	// Use useEffect for client-side navigation
+	useEffect(() => {
+		if (isError) {
+			router.push(ERoutes.LOGIN);
+		}
+	}, [isError, router]);
 
 	return (
-		<UserContext.Provider value={{ user, isLoading, remove }}>
+		<UserContext.Provider value={{ user, isLoading }}>
 			{children}
 		</UserContext.Provider>
 	);

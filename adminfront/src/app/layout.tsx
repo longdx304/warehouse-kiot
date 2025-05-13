@@ -3,9 +3,10 @@ import { ConfigProvider } from 'antd';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-
-import { MedusaProvider } from '@/lib/providers/medusa-provider';
+import QueryProvider from '@/lib/providers/query-provider';
 import theme from '../theme';
+import { queryClient } from '@/lib/constants/query-client';
+import { MedusaProvider } from '@/lib/providers/medusa-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 	manifest: '/manifest.json',
 };
 
-export default async function RootLayout({
+export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
@@ -29,7 +30,9 @@ export default async function RootLayout({
 			<body className={inter.className}>
 				<AntdRegistry>
 					<ConfigProvider theme={theme}>
-						<MedusaProvider>{children}</MedusaProvider>
+						<MedusaProvider>
+							<QueryProvider>{children}</QueryProvider>
+						</MedusaProvider>
 					</ConfigProvider>
 				</AntdRegistry>
 			</body>

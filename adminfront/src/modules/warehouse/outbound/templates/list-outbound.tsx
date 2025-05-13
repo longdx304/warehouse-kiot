@@ -8,21 +8,19 @@ import List from '@/components/List';
 import { Switch } from '@/components/Switch';
 import { Tabs } from '@/components/Tabs';
 import { Text, Title } from '@/components/Typography';
-import {
-	useAdminProductOutboundHandler,
-	useAdminProductOutboundRemoveHandler,
-	useAdminProductOutbounds,
-} from '@/lib/hooks/api/product-outbound';
-import { getErrorMessage } from '@/lib/utils';
+import { useAssignOrder, useUnassignOrder } from '@/lib/hooks/api/order/mutations';
+import { useGetStockOut } from '@/lib/hooks/api/order/queries';
 import { FulfillmentStatus } from '@/types/fulfillments';
+import { StockOut } from '@/types/order';
 import { ERoutes } from '@/types/routes';
-import { Order } from '@medusajs/medusa';
 import { message, TabsProps } from 'antd';
 import debounce from 'lodash/debounce';
 import { ArrowDown, ArrowUp, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ChangeEvent, FC, useState } from 'react';
 import OutboundItem from '../components/outbound-item';
+import { getErrorMessage } from '@/lib/utils';
+import { useUser } from '@/lib/providers/user-provider';
 
 type Props = {};
 
@@ -38,16 +36,14 @@ const ListOutbound: FC<Props> = ({ }) => {
 	);
 	const [myOrder, setMyOrder] = useState(false);
 
-	const { orders, isLoading, count } = useAdminProductOutbounds({
-		q: searchValue || undefined,
-		offset,
-		limit: DEFAULT_PAGE_SIZE,
-		fulfillment_status: activeKey,
-		isMyOrder: myOrder ? true : undefined,
-		order: sortOrder === 'DESC' ? '-created_at' : 'created_at',
-	});
-	const productOutboundHandler = useAdminProductOutboundHandler();
-	const productOutboundRemoveHandler = useAdminProductOutboundRemoveHandler();
+	const { data: stockOut, isLoading } = useGetStockOut();
+	console.log('stockOut', stockOut);
+
+	const assignOrder = useAssignOrder();
+	const unassignOrder = useUnassignOrder();
+	const { user } = useUser();
+	// const productOutboundHandler = useAdminProductOutboundHandler();
+	// const productOutboundRemoveHandler = useAdminProductOutboundRemoveHandler();
 
 	const handleChangeDebounce = debounce((e: ChangeEvent<HTMLInputElement>) => {
 		const { value: inputValue } = e.target;
@@ -74,36 +70,35 @@ const ListOutbound: FC<Props> = ({ }) => {
 		},
 	];
 
-	const handleClickDetail = async (item: Order) => {
+	const handleClickDetail = async (item: StockOut) => {
 		return router.push(`${ERoutes.WAREHOUSE_OUTBOUND}/${item.id}`);
 	};
 
-	const handleConfirm = async (item: Order) => {
-		await productOutboundHandler.mutateAsync(
-			{ id: item.id },
-			{
-				onSuccess: () => {
-					router.push(`${ERoutes.WAREHOUSE_OUTBOUND}/${item.id}`);
-				},
-				onError: (err) => {
-					message.error(getErrorMessage(err));
-				},
-			}
-		);
+	const handleConfirm = async (item: StockOut) => {
+		await assignOrder.mutateAsync({
+			order_id: item.id,
+			user_id: user?.id || '',
+		}, {
+			onSuccess: () => {
+				router.push(`${ERoutes.WAREHOUSE_OUTBOUND}/${item.id}`);
+			},
+			onError: (err) => {
+				message.error(getErrorMessage(err));
+			},
+		});
 	};
 
-	const handleRemoveHandler = async (item: Order) => {
-		await productOutboundRemoveHandler.mutateAsync(
-			{ id: item.id },
-			{
-				onSuccess: () => {
-					message.success('Huỷ bỏ xử lý đơn hàng thành công');
-				},
-				onError: (err) => {
-					message.error(getErrorMessage(err));
-				},
-			}
-		);
+	const handleRemoveHandler = async (item: StockOut) => {
+		await unassignOrder.mutateAsync({
+			order_id: item.id,
+		}, {
+			onSuccess: () => {
+				message.success('Huỷ bỏ xử lý đơn hàng thành công');
+			},
+			onError: (err) => {
+				message.error(getErrorMessage(err));
+			},
+		});
 	};
 
 	return (
@@ -145,9 +140,9 @@ const ListOutbound: FC<Props> = ({ }) => {
 				/>
 				<List
 					grid={{ gutter: 12, xs: 1, sm: 2, md: 2, lg: 3, xl: 4, xxl: 5 }}
-					dataSource={orders}
+					dataSource={stockOut?.data || []}
 					loading={isLoading}
-					renderItem={(item: Order) => (
+					renderItem={(item: StockOut) => (
 						<List.Item>
 							<OutboundItem
 								item={item}
@@ -161,7 +156,7 @@ const ListOutbound: FC<Props> = ({ }) => {
 						onChange: (page) => handleChangePage(page),
 						pageSize: DEFAULT_PAGE_SIZE,
 						current: numPages || 1,
-						total: count,
+						total: stockOut?.total || 0,
 						showTotal: (total, range) =>
 							`${range[0]}-${range[1]} trong ${total} đơn hàng`,
 					}}

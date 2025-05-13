@@ -3,14 +3,14 @@ import { Menu, message } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 
-import { removeCookie } from '@/actions/auth';
-import { ERoutes } from '@/types/routes';
-import { User } from '@medusajs/medusa';
-import { useAdminDeleteSession } from 'medusa-react';
+import { deleteCookie } from '@/actions/auth';
+import { ERoutes } from '@/types/routes';	
 import { menuItems, menuRoutes } from './MenuItem';
+import { useLogout } from '@/lib/hooks/api/auth';
+import { User } from '@/types/auth';
 
 interface Props {
-	user: Omit<User, 'password_hash'>;
+	user: User;
 	className?: string;
 	remove: () => void;
 	onClose?: () => void;
@@ -19,7 +19,7 @@ interface Props {
 const Menubar = ({ user, remove, className, onClose = () => {} }: Props) => {
 	const router = useRouter();
 	const [messageApi, contextHolder] = message.useMessage();
-	const { mutateAsync } = useAdminDeleteSession();
+	const { mutateAsync: logout } = useLogout();
 
 	// Handle user click menu items
 	const handleClickMenu: MenuProps['onClick'] = (e) => {
@@ -32,10 +32,10 @@ const Menubar = ({ user, remove, className, onClose = () => {} }: Props) => {
 	};
 
 	const logOut = async () => {
-		mutateAsync(undefined, {
+		logout(undefined, {
 			onSuccess: async () => {
 				remove();
-				await removeCookie();
+				await deleteCookie();
 				router.push(ERoutes.LOGIN);
 			},
 			onError: (err) => {
