@@ -7,7 +7,7 @@ class Order(Base, TimestampModel):
     """Order entity model from KiotViet API"""
     __tablename__ = "orders"
     
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
     code = Column(String, nullable=False, unique=True)
     customer_name = Column(String, nullable=True)
     status = Column(Integer, nullable=False)
@@ -17,7 +17,7 @@ class Order(Base, TimestampModel):
     
     
     # Relationships
-    order_details = relationship("LineItem", back_populates="order", cascade="all, delete-orphan")
+    items = relationship("LineItem", back_populates="order", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Order {self.code}: {self.status_value}>"

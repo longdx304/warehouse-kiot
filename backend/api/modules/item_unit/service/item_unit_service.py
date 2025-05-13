@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
+from sqlalchemy.future import select
 
 from api.modules.item_unit.repository.item_unit_repository import ItemUnitRepository
 from api.modules.item_unit.entity.item_unit_entity import ItemUnit
@@ -8,11 +9,67 @@ from core.error_handlers import add_error_handlers
 from core.exceptions import NotFoundException, ValidationException
 
 class ItemUnitService:
-    """Service for item unit business logic"""
+    """Service for item unit operations"""
     
     def __init__(self, db: AsyncSession):
+        self.db = db
         self.repository = ItemUnitRepository(db)
     
+    async def retrieve(self, unit_id: str) -> Optional[ItemUnit]:
+        """Retrieve an item unit by ID"""
+        query = select(ItemUnit).where(ItemUnit.id == unit_id)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+    
+    async def list(self, filter_params: Dict[str, Any] = None) -> List[ItemUnit]:
+        """List item units with optional filtering"""
+        query = select(ItemUnit)
+        
+        if filter_params:
+            for key, value in filter_params.items():
+                if hasattr(ItemUnit, key):
+                    query = query.where(getattr(ItemUnit, key) == value)
+        
+        result = await self.db.execute(query)
+        return result.scalars().all()
+    
+    async def create(self, data: Dict[str, Any]) -> ItemUnit:
+        """Create a new item unit"""
+        item_unit = ItemUnit(
+            id=data.get("id"),
+            name=data.get("name"),
+            quantity=data.get("quantity", 1),
+            is_default=data.get("is_default", False),
+            parent_id=data.get("parent_id")
+        )
+        
+        self.db.add(item_unit)
+        await self.db.flush()
+        return item_unit
+    
+    async def update(self, unit_id: str, data: Dict[str, Any]) -> Optional[ItemUnit]:
+        """Update an item unit"""
+        item_unit = await self.retrieve(unit_id)
+        if not item_unit:
+            return None
+        
+        for key, value in data.items():
+            if hasattr(item_unit, key):
+                setattr(item_unit, key, value)
+        
+        await self.db.flush()
+        return item_unit
+    
+    async def delete(self, unit_id: str) -> bool:
+        """Delete an item unit"""
+        item_unit = await self.retrieve(unit_id)
+        if not item_unit:
+            return False
+        
+        await self.db.delete(item_unit)
+        await self.db.flush()
+        return True
+
     async def create_item_unit(self, item_unit_data: ItemUnitCreate) -> ItemUnit:
         """Create a new item unit"""
         # Check if unit already exists

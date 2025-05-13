@@ -17,6 +17,7 @@ class StockOut(BaseModel):
   statusValue: str
   orderDetails : List[OrderDetail]
   retailerId: int
+  soldByName: str
   modifiedDate: datetime
   createdDate: datetime
 
@@ -33,15 +34,17 @@ class StockOutRequest(BaseModel):
 
 class AssignOrderRequest(BaseModel):
   """DTO for assign order request"""
-  order_id: str
+  order_id: int
   user_id: str
 
 class UnassignOrderRequest(BaseModel):
   """DTO for unassign order request"""
-  order_id: str
+  order_id: int
 
 class OrderActionResponse(BaseModel):
   """DTO for order action response"""
   success: bool
   message: str
-  order_id: Optional[str] = None
+  order_id: Optional[int] = None
+  kiotviet_id: Optional[int] = None
+  code: Optional[str] = None

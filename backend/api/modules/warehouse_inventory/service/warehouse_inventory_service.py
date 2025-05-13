@@ -1,5 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
+from sqlalchemy.future import select
+from api.utils.id_generator import generate_id, Prefix
 
 from api.modules.warehouse_inventory.repository.warehouse_inventory_repository import WarehouseInventoryRepository
 from api.modules.warehouse_inventory.entity.warehouse_inventory_entity import WarehouseInventory
@@ -8,12 +10,83 @@ from api.modules.warehouse.service.warehouse_service import WarehouseService
 from api.modules.item_unit.service.item_unit_service import ItemUnitService
 
 class WarehouseInventoryService:
-    """Service for warehouse inventory business logic"""
+    """Service for warehouse inventory operations"""
     
     def __init__(self, db: AsyncSession):
+        self.db = db
         self.repository = WarehouseInventoryRepository(db)
         self.warehouse_service = WarehouseService(db)
         self.item_unit_service = ItemUnitService(db)
+    
+    async def retrieve(self, inventory_id: str) -> Optional[WarehouseInventory]:
+        """Retrieve a warehouse inventory by ID"""
+        query = select(WarehouseInventory).where(WarehouseInventory.id == inventory_id)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+    
+    async def retrieve_by_sku(self, warehouse_id: str, sku: str) -> Optional[WarehouseInventory]:
+        """Retrieve a warehouse inventory by warehouse ID and SKU"""
+        query = select(WarehouseInventory).where(
+            WarehouseInventory.warehouse_id == warehouse_id,
+            WarehouseInventory.sku == sku
+        )
+        result = await self.db.execute(query)
+        return result.scalars().first()
+    
+    async def list(self, filter_params: Dict[str, Any] = None) -> List[WarehouseInventory]:
+        """List warehouse inventories with optional filtering"""
+        query = select(WarehouseInventory)
+        
+        if filter_params:
+            for key, value in filter_params.items():
+                if hasattr(WarehouseInventory, key):
+                    query = query.where(getattr(WarehouseInventory, key) == value)
+        
+        result = await self.db.execute(query)
+        return result.scalars().all()
+    
+    async def create(self, data: Dict[str, Any]) -> WarehouseInventory:
+        """Create a new warehouse inventory"""
+        from uuid import uuid4
+        
+        inventory = WarehouseInventory(
+            id=data.get("id") or generate_id(Prefix.WAREHOUSE_INVENTORY),
+            warehouse_id=data.get("warehouse_id"),
+            sku=data.get("sku"),
+            quantity=data.get("quantity", 0),
+            unit_id=data.get("unit_id")
+        )
+        
+        self.db.add(inventory)
+        await self.db.flush()
+        return inventory
+    
+    async def create_unit_with_variant(self, data: Dict[str, Any]) -> WarehouseInventory:
+        """Create a new warehouse inventory with a different unit"""
+        return await self.create(data)
+    
+    async def update(self, inventory_id: str, data: Dict[str, Any]) -> Optional[WarehouseInventory]:
+        """Update a warehouse inventory"""
+        inventory = await self.retrieve(inventory_id)
+        if not inventory:
+            return None
+        
+        for key, value in data.items():
+            if hasattr(inventory, key):
+                setattr(inventory, key, value)
+        
+        await self.db.flush()
+        return inventory
+    
+    async def delete(self, inventory_id: str) -> bool:
+        """Delete a warehouse inventory"""
+        inventory = await self.retrieve(inventory_id)
+        if not inventory:
+            return False
+        
+        await self.db.delete(inventory)
+        await self.db.flush()
+        return True
     
     async def create_inventory(self, inventory_data: WarehouseInventoryCreate) -> WarehouseInventory:
         """Create a new inventory item"""

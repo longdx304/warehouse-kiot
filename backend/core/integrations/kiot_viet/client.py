@@ -102,17 +102,27 @@ class KiotVietClient:
         """Get orders from KiotViet"""
         return await self._request("GET", "/orders", params=params)
     
-    async def get_order_by_id(self, order_id: str) -> Optional[Dict[str, Any]]:
+    async def get_order_by_id(self, order_id: int) -> Optional[Dict[str, Any]]:
         """Get a specific order by its id"""
-        # Convert order_id to string if not already
-        order_id = str(order_id)
+        # Convert order_id to int if not already
+        order_id = int(order_id)
         
-        params = {"orderId": order_id}
-        response = await self._request("GET", "/orders", params=params)
-        
-        if response.get("total", 0) == 0 or not response.get("data"):
-            logger.warning(f"No order found with id: {order_id}")
+        try:
+            # Use the direct endpoint for fetching by ID
+            response = await self._request("GET", f"/orders/{order_id}")
+            logger.info(f"Successfully retrieved order {order_id}")
+            return response
+        except Exception as e:
+            logger.warning(f"Failed to get order with id {order_id}: {str(e)}")
             return None
-        
-        return response["data"][0]
-      
+    
+    async def get_order_by_code(self, code: str) -> Optional[Dict[str, Any]]:
+        """Get a specific order by its code"""
+        try:
+            # Use the direct endpoint for fetching by code
+            response = await self._request("GET", f"/orders/code/{code}")
+            logger.info(f"Successfully retrieved order with code {code}")
+            return response
+        except Exception as e:
+            logger.warning(f"Failed to get order with code {code}: {str(e)}")
+            return None

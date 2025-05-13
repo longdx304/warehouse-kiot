@@ -8,14 +8,14 @@ class LineItem(Base, TimestampModel):
     __tablename__ = "line_items"
     
     id = Column(String, primary_key=True)
-    order_id = Column(String, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
+    order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
     product_code = Column(String, nullable=False)
     product_name = Column(String, nullable=False)
     quantity = Column(Float, nullable=False)
-    warehouse_inventory = Column(Integer, nullable=True)
+    warehouse_inventory = Column(Float, nullable=True) 
     
     # Relationships
-    order = relationship("Order", back_populates="order_details")
+    order = relationship("Order", back_populates="items")
     
     def __repr__(self):
         return f"<LineItem {self.product_code}: {self.quantity}>"
